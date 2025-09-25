@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import Modal from '../common/Modal';
 import Button from '../common/Button';
 import { db } from '../../lib/db';
@@ -10,6 +9,27 @@ interface RefillModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+// Moved InputField outside the component to prevent it from being recreated on every render,
+// which causes the input to lose focus.
+const InputField = ({ label, value, onChange, placeholder, unit }: { label: string, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, placeholder: string, unit: string }) => (
+    <div className="mb-4">
+        <label className="block text-sm font-medium text-brand-text-muted mb-1">{label}</label>
+        <div className="flex items-center">
+            <input
+                type="number"
+                inputMode="decimal" // Use a numeric keyboard with decimals on mobile
+                step="any" // Allow any decimal value
+                value={value}
+                onChange={onChange}
+                placeholder={placeholder}
+                className="w-full bg-brand-bg border border-brand-secondary rounded-md p-2 text-brand-text focus:ring-brand-primary focus:border-brand-primary"
+            />
+             <span className="ml-2 text-brand-text-muted">{unit}</span>
+        </div>
+    </div>
+);
+
 
 const RefillModal: React.FC<RefillModalProps> = ({ isOpen, onClose }) => {
   const { actions } = useAppStore();
@@ -52,22 +72,6 @@ const RefillModal: React.FC<RefillModalProps> = ({ isOpen, onClose }) => {
     onClose();
   };
 
-  const InputField = ({ label, value, onChange, placeholder, unit }: { label: string, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, placeholder: string, unit: string }) => (
-    <div className="mb-4">
-        <label className="block text-sm font-medium text-brand-text-muted mb-1">{label}</label>
-        <div className="flex items-center">
-            <input
-                type="number"
-                value={value}
-                onChange={onChange}
-                placeholder={placeholder}
-                className="w-full bg-brand-bg border border-brand-secondary rounded-md p-2 text-brand-text focus:ring-brand-primary focus:border-brand-primary"
-            />
-             <span className="ml-2 text-brand-text-muted">{unit}</span>
-        </div>
-    </div>
-  );
-
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Log Fuel Refill">
       <form onSubmit={handleSubmit}>
@@ -94,4 +98,6 @@ const RefillModal: React.FC<RefillModalProps> = ({ isOpen, onClose }) => {
   );
 };
 
-export default RefillModal;
+// Memoize the component to prevent re-renders from the parent (SpeedometerView)
+// which updates frequently. This preserves the input focus.
+export default memo(RefillModal);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { db } from '../../lib/db';
 import type { Trip } from '../../types';
@@ -113,6 +113,12 @@ const SpeedometerView: React.FC = () => {
     const [isRefillModalOpen, setIsRefillModalOpen] = useState(false);
     const tripDataRef = React.useRef({ maxSpeed: 0, speeds: [] as number[] });
 
+    // Stabilize the onClose handler with useCallback to prevent the memoized RefillModal
+    // from re-rendering unnecessarily when SpeedometerView updates.
+    const handleCloseRefillModal = useCallback(() => {
+        setIsRefillModalOpen(false);
+    }, []);
+
     useEffect(() => {
       if(isTripActive) {
         if(speedKmh > tripDataRef.current.maxSpeed) {
@@ -169,7 +175,7 @@ const SpeedometerView: React.FC = () => {
             </div>
             <RefillModal
                 isOpen={isRefillModalOpen}
-                onClose={() => setIsRefillModalOpen(false)}
+                onClose={handleCloseRefillModal}
             />
         </div>
     );
